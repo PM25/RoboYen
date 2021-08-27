@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 import subprocess
 
@@ -35,4 +36,4 @@ if __name__ == "__main__":
         except:
             print("*Failed to execute main()")
         
-        sleep(1)
+        time.sleep(1)

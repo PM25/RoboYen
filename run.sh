@@ -1,6 +1,6 @@
 cd /home/py/RoboYen
 
-python3 joystick.py &
+python3 roboyen.py &
 echo $! > pid.txt
 
 # python3 arm.py &
