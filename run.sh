@@ -1,10 +1,4 @@
 cd /home/py/RoboYen
 
-python3 roboyen.py &
+python3 main.py &
 echo $! > pid.txt
-
-# python3 arm.py &
-# echo $! >> pid.txt
-
-python3 webcam.py &
-echo $! >> pid.txt
