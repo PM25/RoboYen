@@ -12,7 +12,6 @@ class Joystick(Component):
         joystick_device = self.select_joystick_device()
         self.joystick = self.wake_up_joystick(joystick_device)
 
-
     # Trying to get signal from joystick until it success.
     def wake_up_joystick(self, device, time_interval=1):
         while True:

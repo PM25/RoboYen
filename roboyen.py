@@ -2,18 +2,13 @@ import time
 import evdev
 from evdev import ecodes
 
-from components import Arduino, Joystick, Camera, Arm
+from components import Arduino, Joystick, Camera, Arm, Light
 
 
 class RoboYen:
     def __init__(self):
         self.arduino = Arduino()
         self.joystick = Joystick().get_joystick()
-
-        self.BTN_A = 304
-        self.BTN_B = 305
-        self.BTN_X = 307
-        self.BTN_Y = 308
 
         self.abs_x = 0
         self.abs_y = 0
@@ -53,34 +48,38 @@ class RoboYen:
         return left_power + 255, right_power + 255
 
     def start(self):
+        self.arduino.send_command("RDY")
+        
         for event in self.joystick.read_loop():
             if event.type == evdev.ecodes.EV_KEY:
                 keyevent = evdev.categorize(event)
-                # print(keyevent)
+                print(keyevent)
                 if keyevent.keystate == evdev.KeyEvent.key_down:
-                    if keyevent.scancode == self.BTN_A:
-                        self.arduino.send_command("BCK", 255)
-                    elif keyevent.scancode == self.BTN_B:
-                        self.arduino.send_command("STP")
-                    elif keyevent.scancode == self.BTN_X:
-                        self.arduino.send_command("STP")
-                    elif keyevent.scancode == self.BTN_Y:
-                        self.arduino.send_command("FWD", 255)
-                    else:
-                        self.arduino.send_command("STP")
+                    if keyevent.scancode == ecodes.ecodes["BTN_THUMBL"]:
+                        self.arduino.send_command("lgf")
+                    elif keyevent.scancode == ecodes.ecodes["BTN_THUMBR"]:
+                        self.arduino.send_command("lga")
 
             elif event.type == ecodes.EV_ABS:
                 absevent = evdev.categorize(event)
 
                 btn = ecodes.bytype[absevent.event.type][absevent.event.code]
                 value = absevent.event.value
-
-                left_power, right_power = 0, 0
+                print(btn, value)
 
                 if btn == "ABS_Y":
                     left_power, right_power = self.abs_x_y_to_wheel_power(abs_y=value)
+                    self.arduino.send_command("MAN", left_power, right_power)
 
                 elif btn == "ABS_X":
                     left_power, right_power = self.abs_x_y_to_wheel_power(abs_x=value)
+                    self.arduino.send_command("MAN", left_power, right_power)
 
-                self.arduino.send_command("MAN", left_power, right_power)
+                elif btn == "ABS_GAS":
+                    self.arduino.send_command("FWD", value)
+
+                elif btn == "ABS_BRAKE":
+                    self.arduino.send_command("BCK", value)
+                    
+
+                
