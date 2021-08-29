@@ -2,13 +2,16 @@ import time
 import serial
 from pathlib import Path
 
+from .component import Component
 
-class Arduino:
+
+class Arduino(Component):
     def __init__(self, try_times=3):
-        arduino_device = self.select_arduino_device()
-        self.arduino = serial.Serial(arduino_device, 9600, timeout=1)
+        super().__init__("ttyUSB*")
+        self.arduino_device = self.select_device()
+        self.arduino = serial.Serial(self.arduino_device, 9600, timeout=1)
         self.arduino.flush()
-
+        
         self.try_times = try_times
 
         self.STOP = 0
@@ -35,27 +38,3 @@ class Arduino:
                     break
             except:
                 self.arduino.close()
-
-    def select_arduino_device(self):
-        print("\n[Arduino]")
-        devices_name = Path("/dev").glob("ttyUSB*")
-        devices_name = [str(n) for n in devices_name]
-
-        assert len(devices_name) > 0
-
-        if len(devices_name) > 1:
-            print()
-            print("=" * 5, "Available Devices for Arduino", "=" * 5)
-            for idx, device_name in enumerate(devices_name):
-                print(f"{idx}:\t{device_name}")
-            print("=" * 30)
-            device_idx = eval(input("Select device >>"))
-
-        elif len(devices_name) == 1:
-            device_idx = 0
-
-        device = devices_name[device_idx]
-
-        print(f"*Selected device for Arduino: {device}")
-
-        return device

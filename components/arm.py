@@ -27,10 +27,10 @@ class Arm:
         pass
 
     def gripper(self, value):
-        kit.servo[self.gripper_rotate].angle = clap_value(value)
+        self.kit.servo[self.gripper_rotate].angle = clap_value(value)
 
     def rotate(self, value):
-        kit.servo[self.base_horizontal].angle = clap_value(value)
+        self.kit.servo[self.base_horizontal].angle = clap_value(value)
 
     def clap_value(self, value, reverse=False):
         value = max(0, min(180, value))
@@ -40,8 +40,8 @@ class Arm:
         return value
 
 
-kit.servo[12].angle = 0
-kit.servo[12].angle = 180
+# kit.servo[12].angle = 0
+# kit.servo[12].angle = 180
 
 # kit.continuous_servo[1].throttle = 1
 # time.sleep(1)

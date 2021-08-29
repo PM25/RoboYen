@@ -3,7 +3,6 @@ import time
 
 from roboyen import RoboYen
 from components import Camera
-from utils.tools import safe_execute
 
 
 def main():
@@ -16,4 +15,4 @@ def main():
 
 
 if __name__ == "__main__":
-    safe_execute(main)
+    main()
