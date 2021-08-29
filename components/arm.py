@@ -5,32 +5,83 @@ from adafruit_servokit import ServoKit
 class Arm:
     def __init__(self):
         self.kit = ServoKit(channels=16)
-        self._base_horizontal = 1
-        self._arm_vertical1 = 2
-        self._arm_vertical2 = 3
-        self._arm_vertical3 = 4
-        self._gripper_rotate = 5
-        self._gripper = 6
-        self._webcame_vertical = 7
-        self._webcame_horizontal = 8
+        self.motors = {
+            "base_horizontal": 1,
+            "arm_vertical1": 2,
+            "arm_vertical2": 3,
+            "arm_vertical3": 4,
+            "gripper_rotate": 5,
+            "gripper": 6,
+            "webcam_vertical": 7,
+            "webcam_horizontal": 8
+        }
+        self.pos = {}
+        self.pos_snapshot = {}
 
     def lift(self, value):
-        pass
-
-    def drop(self, value):
         pass
 
     def forward(self, value):
         pass
 
-    def backward(self, value):
-        pass
-
     def gripper(self, value):
-        self.kit.servo[self.gripper_rotate].angle = clap_value(value)
+        motor_id = self.motors["gripper"]
+        self.kit.servo[motor_id].angle = clap_value(value)
+        self.pos[motor_id] = value
 
-    def rotate(self, value):
-        self.kit.servo[self.base_horizontal].angle = clap_value(value)
+    def gripper_rotate(self, value):
+        motor_id = self.motors["gripper_ratate"]
+        self.kit.servo[motor_id].angle = clap_value(value)
+        self.pos[motor_id] = value
+
+    def arm_rotate(self, value):
+        motor_id = self.motors["base_horizontal"]
+        self.kit.servo[motor_id].angle = clap_value(value)
+        self.pos[motor_id] = value
+
+    def webcam_rotate(self, value):
+        motor_id = self.motors["webcam_horizontal"]
+        self.kit.servo[motor_id].angle = clap_value(value)
+        self.pos[motor_id] = value
+    
+    def webcam_vertical(self, value):
+        motor_id = self.motors["webcam_vertical"]
+        self.kit.servo[motor_id].angle = clap_value(value)
+        self.pos[motor_id] = value
+
+    def save_pos(self):
+        self.pos_snapshot = self.pos.copy()
+
+    def reset_pos(self):
+        motors_pos = {
+            "gripper": 160,
+            "gripper_rotate": 90,
+            "forward": 100,
+            "lift": 100,
+            "arm_rotate": 90,
+            "webcam_rotate": 90,
+            "webcam_vertical": 50,
+        }
+        
+        for motor_name, pos in motors_pos:
+            motor_id = self.motors[motor_name]
+            self.kit.servo[motor_id].angle = clap_value(pos)
+
+    def hide_from_camera_pos(self):
+        motors_pos = {
+            "gripper_rotate": 90,
+            "forward": 100,
+            "lift": -100,
+            "arm_rotate": 90,
+        }
+        
+        for motor_name, pos in motors_pos:
+            motor_id = self.motors[motor_name]
+            self.kit.servo[motor_id].angle = clap_value(pos)
+
+    def saved_pos(self):
+        for motor_id, pos in self.pos_snapshot:
+            self.kit.servo[motor_id].angle = clap_value(pos)
 
     def clap_value(self, value, reverse=False):
         value = max(0, min(180, value))
@@ -38,14 +89,3 @@ class Arm:
             value = 180 - value
         
         return value
-
-
-# kit.servo[12].angle = 0
-# kit.servo[12].angle = 180
-
-# kit.continuous_servo[1].throttle = 1
-# time.sleep(1)
-# kit.continuous_servo[1].throttle = -1
-# time.sleep(1)
-# kit.servo[0].angle = 0
-# kit.continuous_servo[1].throttle = 0
