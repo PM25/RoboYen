@@ -8,11 +8,12 @@ from .component import Component
 class Arduino(Component):
     def __init__(self, try_times=3):
         super().__init__("ttyUSB*")
+        self.try_times = try_times
+        
         self.arduino_device = self.select_device()
         self.arduino = serial.Serial(self.arduino_device, 9600, timeout=1)
         self.arduino.flush()
-        
-        self.try_times = try_times
+        self.send_command("PRE")
 
         self.STOP = 0
         self.FORWARD = 1

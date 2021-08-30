@@ -2,11 +2,12 @@ import time
 import evdev
 from evdev import ecodes
 
-from components import Arduino, Joystick, Camera, Arm, Light
+from components import Arduino, Joystick, Camera, Arm
 
 
 class RoboYen:
     def __init__(self):
+        self.arm = Arm()
         self.arduino = Arduino()
         self.joystick = Joystick().get_joystick()
 
@@ -53,12 +54,39 @@ class RoboYen:
         for event in self.joystick.read_loop():
             if event.type == evdev.ecodes.EV_KEY:
                 keyevent = evdev.categorize(event)
-                print(keyevent)
+                # print(keyevent)
                 if keyevent.keystate == evdev.KeyEvent.key_down:
                     if keyevent.scancode == ecodes.ecodes["BTN_THUMBL"]:
-                        self.arduino.send_command("lgf")
+                        self.arduino.send_command("LGF")
                     elif keyevent.scancode == ecodes.ecodes["BTN_THUMBR"]:
-                        self.arduino.send_command("lga")
+                        self.arduino.send_command("LGA")
+                    elif keyevent.scancode == ecodes.ecodes["BTN_X"]:
+                        self.arm.execute_command("webcam_rotate", -1)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_B"]:
+                        self.arm.execute_command("webcam_rotate", +1)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_Y"]:
+                        self.arm.execute_command("webcam_vertical", +1)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_A"]:
+                        self.arm.execute_command("webcam_vertical", -1)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_TL"]:
+                        self.arm.execute_command("gripper", 1)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_TR"]:
+                        self.arm.execute_command("gripper", -1)
+                
+                elif keyevent.keystate == evdev.KeyEvent.key_up:
+                    if keyevent.scancode == ecodes.ecodes["BTN_X"]:
+                        self.arm.execute_command("webcam_rotate", 0)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_B"]:
+                        self.arm.execute_command("webcam_rotate", 0)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_Y"]:
+                        self.arm.execute_command("webcam_vertical", 0)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_A"]:
+                        self.arm.execute_command("webcam_vertical", 0)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_TL"]:
+                        self.arm.execute_command("gripper", 0)
+                    elif keyevent.scancode == ecodes.ecodes["BTN_TR"]:
+                        self.arm.execute_command("gripper", 0)
+
 
             elif event.type == ecodes.EV_ABS:
                 absevent = evdev.categorize(event)
@@ -80,6 +108,12 @@ class RoboYen:
 
                 elif btn == "ABS_BRAKE":
                     self.arduino.send_command("BCK", value)
-                    
+
+                elif btn == "ABS_HAT0X":
+                    self.arm.execute_command("gripper_rotate", value)
+                
+                elif btn == "ABS_Z":
+                    self.arm.execute_command("arm_rotate", (value - 128) // 40)
+                   
 
                 
