@@ -1,9 +1,13 @@
 #include <AFMotor.h>
+
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
 #include "EncoderMotor.h"
 
-#define Left_Encoder_Output_A 20 // pin2 of the Arduino
+#define Left_Encoder_Output_A 18 // pin2 of the Arduino
 #define Left_Encoder_Output_B 22 // pin3 of the Arduino
-#define Right_Encoder_Output_A 21 // pin4 of the Arduino
+#define Right_Encoder_Output_A 19 // pin4 of the Arduino
 #define Right_Encoder_Output_B 23 // pin5 of the Arduino
 
 #define Red_Pin 24
@@ -17,6 +21,102 @@
 
 AF_DCMotor left_motor(1, MOTOR12_8KHZ);
 AF_DCMotor right_motor(2, MOTOR12_8KHZ);
+
+class ServoMotor {
+  private:
+    const int channel;
+    volatile int target_angle;
+    volatile int curr_angle;
+    const int min_pulselen;
+    const int max_pulselen;
+    Adafruit_PWMServoDriver *pwm;
+  
+  public:
+    ServoMotor(Adafruit_PWMServoDriver*, int, int, int, int);
+    int set_angle(int);
+    int angle_to_pulselen(int);
+    void update_angle();
+};
+
+ServoMotor::ServoMotor(Adafruit_PWMServoDriver *pwm, int channel, int start_angle, const int min_pulselen, const int max_pulselen): channel(channel), min_pulselen(min_pulselen), max_pulselen(max_pulselen) {
+  this->pwm = pwm;
+  this->curr_angle = start_angle;
+  this->target_angle = start_angle;
+
+  pwm->setPWM(this->channel, 0, this->curr_angle);
+}
+
+int ServoMotor::angle_to_pulselen(int angle) {
+  return map(angle, 0, 180, this->min_pulselen, this->max_pulselen);
+}
+
+int ServoMotor::set_angle(int angle) {
+  
+  this->target_angle = angle;
+}
+
+void ServoMotor::update_angle() {
+  
+  if(this->target_angle > this->curr_angle) {
+    ++this->curr_angle;
+    this->pwm->setPWM(this->channel, 0, curr_angle);
+  } else if (this->target_angle < this->curr_angle) {
+    --this->curr_angle;
+    this->pwm->setPWM(this->channel, 0, curr_angle);
+  } 
+  
+  delay(10);
+}
+
+
+
+class Arm {
+  private:
+    Adafruit_PWMServoDriver pwm;
+    ServoMotor *base_horizontal,
+               *arm_vertical1,
+               *arm_vertical2,
+               *arm_vertical3,
+               *gripper_rotate,
+               *gripper,
+               *webcam_horizontal,
+               *webcam_vertical;
+  public:
+    Arm(int);
+    void rotate_arm(int);
+    void update_all();
+    void move_arm_vertical1(int);
+};
+
+Arm::Arm(int SERVO_FREQ) {
+  this->pwm = Adafruit_PWMServoDriver();
+  this->pwm.begin();
+  this->pwm.setOscillatorFrequency(27000000);
+  this->pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
+
+  this->base_horizontal = &ServoMotor(&this->pwm, 0, 150, 110, 460);
+  this->arm_vertical1 = &ServoMotor(&this->pwm, 1, 200, 180, 400);
+//  this->arm_vertical2 = &ServoMotor(&this->pwm, 0, 90, 110, 460);
+//  this->arm_vertical3 = &ServoMotor(&this->pwm, 0, 90, 110, 460);
+//  this->gripper_rotate = &ServoMotor(&this->pwm, 0, 90, 110, 460);
+//  this->gripper = &ServoMotor(&this->pwm, 0, 90, 110, 460);
+//  this->webcam_horizontal = &ServoMotor(&this->pwm, 0, 90, 110, 460);
+//  this->webcam_vertical = &ServoMotor(&this->pwm, 0, 90, 110, 460);
+}
+
+void Arm::rotate_arm(int angle) {
+  this->base_horizontal->set_angle(angle);
+}
+
+void Arm::move_arm_vertical1(int angle) {
+  this->arm_vertical1->set_angle(angle);
+}
+
+void Arm::update_all() {
+  this->base_horizontal->update_angle();
+  this->arm_vertical1->update_angle();
+}
+
 
 class MyRobot {
   private:
@@ -130,6 +230,7 @@ void MyRobot::manual_set(int left_power, int right_power) {
 EncoderMotor left_wheel(left_motor, 1.0, 0.166, 0, 1, 255, 50);
 EncoderMotor right_wheel(right_motor, 1.0, 0.05, 0, 0, 255, 70);
 MyRobot robot(left_wheel, right_wheel);
+Arm *arm;
 
 void setup() {
   Serial.begin(9600); // activates the serial communication
@@ -152,6 +253,27 @@ void setup() {
   digitalWrite(Blue_Pin, LOW);
   digitalWrite(Car_LED_Pin, HIGH);
   digitalWrite(Arm_LED_Pin, HIGH);
+
+  delay(10);
+  arm = new Arm(50);
+  delay(10);
+
+////  Arm arm(0, 90, 110, 460, 50);
+//  delay(1000);
+//  arm.rotate_arm(400);
+//  for(int i=0; i<100; ++i) {
+//    arm.update_all();
+//  }
+//  delay(1000);
+//  
+
+//  ServoMotor servo_motor1(0, 90, 110, 460, 50);
+//  ServoMotor servo_motor2(0, 90, 110, 460, 50);
+//  ServoMotor servo_motor3(0, 90, 110, 460, 50);
+//  ServoMotor servo_motor4(0, 90, 110, 460, 50);
+//  ServoMotor servo_motor5(0, 90, 110, 460, 50);
+//  ServoMotor servo_motor6(0, 90, 110, 460, 50);
+//  ServoMotor servo_motor7(0, 90, 110, 460, 50);
 }
 
 char *command;
@@ -204,9 +326,19 @@ void loop() {
     if(value1) digitalWrite(Car_LED_Pin, LOW);
     else digitalWrite(Car_LED_Pin, HIGH);
     command = "STP";
+  } else if(!strcmp(command, "SER")) {
+    if(value1 == 0) {
+      arm->rotate_arm(value2);  
+    } else if(value1 == 1) {
+      arm->move_arm_vertical1(value2);
+    }
+    
+    command = "STP";
   } else {
     robot.go(0, 0);
   }
+
+  arm->update_all();
   
   delay(10);
 }
