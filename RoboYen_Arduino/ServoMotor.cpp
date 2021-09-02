@@ -34,6 +34,4 @@ void ServoMotor::update() {
   } else {
     this->pwm->setPin(this->channel, 0);
   }
-  
-  delay(1);
 }

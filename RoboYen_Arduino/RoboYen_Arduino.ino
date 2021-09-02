@@ -1,7 +1,7 @@
 #include <AFMotor.h>
 
 #include "Arm.h"
-#include "EncoderMotor.h"
+#include "WheelSystem.h"
 
 #define Left_Encoder_Output_A 18 // pin2 of the Arduino
 #define Left_Encoder_Output_B 22 // pin3 of the Arduino
@@ -20,120 +20,11 @@
 AF_DCMotor left_motor(1, MOTOR12_8KHZ);
 AF_DCMotor right_motor(2, MOTOR12_8KHZ);
 
-
-class MyRobot {
-  private:
-    volatile long left_pos;
-    volatile long right_pos;
-    long prev_time;
-    float prev_loss;
-    float loss_integral;
-    const EncoderMotor &left_wheel;
-    const EncoderMotor &right_wheel;
-    int prev_diff = 0;
-    int prev_t = 0;
-  
-  public:
-    MyRobot(const EncoderMotor&, const EncoderMotor&);
-    void go(int, int);
-    void update_left_pos(int);
-    void update_right_pos(int);
-    void reset();
-    void manual_set(int, int);
-};
-
-MyRobot::MyRobot(const EncoderMotor &left_motor, const EncoderMotor &right_motor): left_wheel(left_motor), right_wheel(right_motor){
-  this->left_pos = 0;
-  this->right_pos = 0;
-  this->prev_time = 0;
-  this->prev_loss = 0;
-  this->loss_integral = 0;
-  this->prev_diff = 0;
-  this->prev_t = 0;
-  
-  this->left_wheel.set_power(255);
-  this->right_wheel.set_power(255);
-}
-
-void MyRobot::go(int move_direction, int power) {
-  this->left_wheel.set_max_power(power);
-  this->right_wheel.set_max_power(power);
-  
-  this->left_wheel.rotate(move_direction);
-  this->right_wheel.rotate(move_direction);
-  
-  int diff = abs(abs(this->left_pos) - abs(this->right_pos)); // left and right motor spin in different direction
-
-  long curr_time = micros();
-  float delta_time = ((float) (curr_time - this->prev_t)) / 1.0e6;
-
-  int derivative = ((this->prev_diff - diff) / delta_time) * 10;
-  
-  if(diff > 10) {
-    if(abs(left_pos) > abs(right_pos)) {
-      if(this->right_wheel.get_max_power() > this->right_wheel.get_power()) {
-        this->right_wheel.set_power(this->right_wheel.get_max_power());
-      } else {
-        this->left_wheel.set_power(this->left_wheel.get_max_power() - diff + derivative);
-      }
-    } else {
-      if(this->left_wheel.get_max_power() > this->left_wheel.get_power()) {
-        this->left_wheel.set_power(this->left_wheel.get_max_power());
-      } else {
-        this->right_wheel.set_power(this->right_wheel.get_max_power() - diff + derivative);
-      }
-    }
-  } else {
-    this->right_wheel.set_power(this->right_wheel.get_max_power());
-    this->left_wheel.set_power(this->left_wheel.get_max_power());
-  }
-
-//  Serial.print(this->left_pos);
-//  Serial.print(", ");
-//  Serial.print(this->right_pos);
-//  Serial.print(", ");
-//  Serial.print(abs(this->right_pos)-abs(this->left_pos));
-//  Serial.print(", ");
-//  Serial.print(this->right_wheel.get_power());
-//  Serial.print(", ");
-//  Serial.println(this->left_wheel.get_power());
-  
-//  Serial.println(diff);
-}
-
-void MyRobot::update_left_pos(int left_pos) {
-  this->left_pos -= left_pos;  
-}
-
-void MyRobot::update_right_pos(int right_pos) {
-  this->right_pos -= right_pos;
-}
-
-void MyRobot::reset() {
-  this->left_pos = 0;
-  this->right_pos = 0;
-  this->prev_time = 0;
-  this->prev_loss = 0;
-  this->loss_integral = 0;
-  this->prev_diff = 0;
-  this->prev_t = 0;
-  
-  this->left_wheel.set_power(255);
-  this->right_wheel.set_power(255);
-}
-
-// left_power, right_power: 0-510
-void MyRobot::manual_set(int left_power, int right_power) {
-  this->left_wheel.set_max_power(255);
-  this->right_wheel.set_max_power(255);
-
-  this->left_wheel.set_power_direction(left_power - 255);
-  this->right_wheel.set_power_direction(right_power - 255);
-}
-
-EncoderMotor left_wheel(left_motor, 1.0, 0.166, 0, 1, 255, 50);
+EncoderMotor left_wheel(left_motor, 1.0, 0.166, 0, 1, 255, 70);
 EncoderMotor right_wheel(right_motor, 1.0, 0.05, 0, 0, 255, 70);
-MyRobot robot(left_wheel, right_wheel);
+
+WheelSystem robot(left_wheel, right_wheel);
+
 Arm *arm;
 
 void setup() {
@@ -213,6 +104,7 @@ void loop() {
     else digitalWrite(Car_LED_Pin, HIGH);
     command = "STP";
   } else if(!strcmp(command, "SER")) {
+    
     switch(value1) {
     case 0:
       arm->rotate_arm(value2);  
@@ -247,7 +139,7 @@ void loop() {
 
   arm->update_all();
   
-  delay(5);
+  delay(10);
 }
 
 void Left_DC_Motor_Encoder() {
