@@ -6,9 +6,9 @@ ServoMotor::ServoMotor(Adafruit_PWMServoDriver *pwm, int channel, int start_angl
   this->curr_pulselen = this->angle_to_pulselen(start_angle);
   this->target_pulselen = this->curr_pulselen;
 
-  delay(100);
+  delay(50);
   pwm->setPWM(this->channel, 0, this->curr_pulselen);
-  delay(1000);
+  delay(500);
 }
 
 int ServoMotor::angle_to_pulselen(int angle) {
@@ -22,14 +22,18 @@ int ServoMotor::set_angle(int angle) {
 }
 
 void ServoMotor::update() {
-  
-  if(this->target_pulselen > this->curr_pulselen) {
+  if(abs(this->target_pulselen - this->curr_pulselen) <= this->rotate_speed) {
+    this->curr_pulselen += this->target_pulselen - this->curr_pulselen;
+    this->pwm->setPWM(this->channel, 0, this->curr_pulselen);
+  } else if(this->target_pulselen > this->curr_pulselen) {
     this->curr_pulselen += this->rotate_speed;
-    this->pwm->setPWM(this->channel, 0, curr_pulselen);
+    this->pwm->setPWM(this->channel, 0, this->curr_pulselen);
   } else if (this->target_pulselen < this->curr_pulselen) {
     this->curr_pulselen -= this->rotate_speed;
-    this->pwm->setPWM(this->channel, 0, curr_pulselen);
-  } 
+    this->pwm->setPWM(this->channel, 0, this->curr_pulselen);
+  } else {
+    this->pwm->setPin(this->channel, 0);
+  }
   
-  delay(5);
+  delay(1);
 }

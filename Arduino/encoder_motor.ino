@@ -158,7 +158,7 @@ void setup() {
   digitalWrite(Car_LED_Pin, HIGH);
   digitalWrite(Arm_LED_Pin, HIGH);
 
-  delay(100);
+  delay(50);
   arm = new Arm(50);
 }
 
