@@ -15,17 +15,16 @@ class Arm {
                *gripper,
                *webcam_horizontal,
                *webcam_vertical;
+  
   public:
     Arm(int);
     void rotate_arm(int);
     void update_all();
-    void move_arm_vertical1(int);
-    void move_arm_vertical2(int);
-    void move_arm_vertical3(int);
-    void rotate_gripper(int);
-    void move_gripper(int);
-    void move_webcam_vertical(int);
-    void move_webcam_horizontal(int);
+    void set_angle(int, int);
+    void set_rotate(int, int);
+    void set_speed(int, int);
+    void lift(int);
+    ServoMotor* id_to_motor(int);
 };
 
 #endif

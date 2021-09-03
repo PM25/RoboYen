@@ -12,13 +12,16 @@ class ServoMotor {
     const int max_angle;
     const int min_pulselen;
     const int max_pulselen;
-    const int rotate_speed;
+    int rotate_speed;
     Adafruit_PWMServoDriver *pwm;
   
   public:
     ServoMotor(Adafruit_PWMServoDriver*, int, int, int, int, int, int, int);
     int set_angle(int);
     int angle_to_pulselen(int);
+    void set_speed(int);
+    void set_rotate(int);
+    void set_relative_angle(int);
     void update();
 };
 

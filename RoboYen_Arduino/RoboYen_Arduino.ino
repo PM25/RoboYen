@@ -103,35 +103,17 @@ void loop() {
     if(value1) digitalWrite(Car_LED_Pin, LOW);
     else digitalWrite(Car_LED_Pin, HIGH);
     command = "STP";
-  } else if(!strcmp(command, "SER")) {
-    
-    switch(value1) {
-    case 0:
-      arm->rotate_arm(value2);  
-      break;
-    case 1:
-      arm->move_arm_vertical1(value2);
-      break;
-    case 2:
-      arm->move_arm_vertical2(value2);
-      break;
-    case 3:
-      arm->move_arm_vertical3(value2);
-      break;
-    case 4:
-      arm->rotate_gripper(value2);
-      break;
-    case 5:
-      arm->move_gripper(value2);
-      break;
-    case 6:
-      arm->move_webcam_horizontal(value2);
-      break;
-    case 7:
-      arm->move_webcam_vertical(value2);
-      break;
-    }
-    
+  } else if(!strcmp(command, "SVA")) {
+    arm->set_angle(value1, value2);
+    command = "STP";
+  } else if(!strcmp(command, "SVR")) {
+    arm->set_rotate(value1, value2);
+    command = "STP";
+  } else if(!strcmp(command, "SVS")) {
+    arm->set_speed(value1, value2);
+    command = "STP";
+  } else if(!strcmp(command, "LFT")) {
+    arm->lift(value1);
     command = "STP";
   } else {
     robot.go(0, 0);
