@@ -98,25 +98,39 @@ void loop() {
   } else if(!strcmp(command, "LGA")) {
     if(value1) digitalWrite(Arm_LED_Pin, LOW);
     else digitalWrite(Arm_LED_Pin, HIGH);
-    command = "STP";
+    command = "NUL";
   } else if(!strcmp(command, "LGF")) {
     if(value1) digitalWrite(Car_LED_Pin, LOW);
     else digitalWrite(Car_LED_Pin, HIGH);
-    command = "STP";
+    command = "NUL";
   } else if(!strcmp(command, "SVA")) {
-    arm->set_angle(value1, value2);
-    command = "STP";
+    arm->set_degree(value1, value2);
+    command = "NUL";
   } else if(!strcmp(command, "SVR")) {
     arm->set_rotate(value1, value2);
-    command = "STP";
+    command = "NUL";
   } else if(!strcmp(command, "SVS")) {
     arm->set_speed(value1, value2);
-    command = "STP";
+    command = "NUL";
+  } else if(!strcmp(command, "GTX")) {
+    Serial.print("x distance: ");
+    Serial.println(arm->get_x_distance());
+    command = "NUL";
+  } else if(!strcmp(command, "GTY")) {
+    Serial.print("y distance: ");
+    Serial.println(arm->get_y_distance());
+    command = "NUL";
   } else if(!strcmp(command, "LFT")) {
     arm->lift(value1);
-    command = "STP";
-  } else {
+  } else if(!strcmp(command, "FRT")) {
+    arm->front(value1);
+  } else if(!strcmp(command, "RST")) {
+    arm->reset_pos();
+    robot.reset();
+    command = "NUL";
+  } else if(!strcmp(command, "KLL")) {
     robot.go(0, 0);
+    arm->force_stop();
   }
 
   arm->update_all();

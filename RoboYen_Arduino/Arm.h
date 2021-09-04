@@ -18,12 +18,17 @@ class Arm {
   
   public:
     Arm(int);
+    void reset_pos();
     void rotate_arm(int);
     void update_all();
-    void set_angle(int, int);
+    void set_degree(int, float);
     void set_rotate(int, int);
     void set_speed(int, int);
     void lift(int);
+    void front(int);
+    void force_stop();
+    float get_x_distance();
+    float get_y_distance();
     ServoMotor* id_to_motor(int);
 };
 
